@@ -1,0 +1,158 @@
+# Crunchyroll Watchlist Organizer - content.css
+:root {
+  --cr-highlight-color: #f47521;
+  --cr-glow-color: rgba(244, 117, 33, 0.35);
+}
+
+/* ==========================================================================
+   1. NÃO DEIXAR TUDO ESCURO
+   Todos os cards mantêm visibilidade 100% normal e nítida por padrão.
+   ========================================================================== */
+.cr-card-completed {
+  opacity: 1 !important;
+  filter: none !important;
+  transition: opacity 0.3s ease, filter 0.3s ease !important;
+}
+
+/* Efeito de esmaecimento SOMENTE se o usuário ativar expressamente no popup */
+.cr-dim-completed .cr-card-completed {
+  opacity: 0.55 !important;
+}
+
+.cr-dim-completed .cr-card-completed:hover {
+  opacity: 1 !important;
+}
+
+/* ==========================================================================
+   2. PINTE SOMENTE O TEXTO
+   Sem bordas pesadas ou caixas brilhantes ao redor do card inteiro.
+   Apenas o texto (título e subtítulo de status) recebe a cor de destaque.
+   ========================================================================== */
+.cr-card-priority {
+  position: relative !important;
+  box-shadow: none !important;
+  border: none !important;
+  outline: none !important;
+  border-radius: 8px !important;
+  transition: transform 0.2s ease !important;
+}
+
+.cr-card-priority:hover {
+  transform: translateY(-2px) !important;
+}
+
+/* Pinte o texto do subtítulo de status (Começar a Assistir, Continuar, A Seguir) */
+.cr-card-priority [class*="watchlist-card-subtitle"],
+.cr-card-priority [class*="subtitle"],
+.cr-card-priority .watchlist-card-subtitle--IROsU {
+  color: var(--cr-highlight-color, #f47521) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.2px !important;
+}
+
+/* Pinte o título do anime prioritário */
+.cr-card-priority [class*="watchlist-card-title"] h3,
+.cr-card-priority [class*="watchlist-card-title__text"],
+.cr-card-priority .watchlist-card-title__text--chGlt {
+  color: var(--cr-highlight-color, #f47521) !important;
+  font-weight: 800 !important;
+  transition: color 0.2s ease, text-shadow 0.2s ease !important;
+}
+
+.cr-card-priority:hover [class*="watchlist-card-title__text"] {
+  text-shadow: 0 0 10px var(--cr-glow-color, rgba(244, 117, 33, 0.45)) !important;
+}
+
+/* Se o modo de borda clássico estiver ativo nas opções (fallback opcional) */
+.cr-card-border-active {
+  box-shadow: 0 0 12px var(--cr-glow-color), 0 0 0 2px var(--cr-highlight-color) !important;
+}
+
+/* ==========================================================================
+   Badge discreta (opcional, desligada por padrão)
+   ========================================================================== */
+.cr-priority-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--cr-highlight-color);
+  color: #ffffff;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.cr-priority-badge svg {
+  width: 9px;
+  height: 9px;
+  fill: currentColor;
+}
+
+/* ==========================================================================
+   Barra de resumo informativa (acima da grade de animes)
+   ========================================================================== */
+.cr-organizer-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  box-sizing: border-box;
+  background: #141519;
+  border: 1px solid #23252b;
+  border-left: 4px solid var(--cr-highlight-color);
+  border-radius: 6px;
+  padding: 10px 16px;
+  margin: 12px 0 20px 0;
+  color: #e0e0e0;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.cr-organizer-toolbar .cr-stats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.cr-organizer-toolbar .cr-stats-count {
+  background: var(--cr-highlight-color);
+  color: #fff;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.cr-organizer-toolbar .cr-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.cr-organizer-toolbar button {
+  background: #23252b;
+  color: #fff;
+  border: 1px solid #3d404a;
+  border-radius: 4px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cr-organizer-toolbar button:hover {
+  background: var(--cr-highlight-color);
+  border-color: var(--cr-highlight-color);
+}

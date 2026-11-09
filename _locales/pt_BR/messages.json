@@ -1,0 +1,11 @@
+{
+  "appName": {
+    "message": "Watchlist Organizer para Crunchyroll™",
+    "description": "Nome da extensão na loja e no navegador"
+  },
+  "appDesc": {
+    "message": "Organiza sua Watchlist na Crunchyroll™ destacando animes em andamento e movendo episódios prioritários para o topo.",
+    "description": "Descrição curta da extensão"
+  }
+}
+

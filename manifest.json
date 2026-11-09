@@ -1,0 +1,39 @@
+{
+  "manifest_version": 3,
+  "name": "__MSG_appName__",
+  "default_locale": "pt_BR",
+  "version": "1.1.0",
+  "description": "__MSG_appDesc__",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "storage"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.crunchyroll.com/*/watchlist*",
+        "*://*.crunchyroll.com/watchlist*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "__MSG_appName__",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  }
+}

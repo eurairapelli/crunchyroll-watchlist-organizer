@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crunchyroll Watchlist Organizer</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <header class="popup-header">
+      <div class="brand">
+        <span class="brand-icon">✨</span>
+        <div class="brand-text">
+          <h1>Crunchyroll</h1>
+          <span class="subtitle">Watchlist Organizer</span>
+        </div>
+      </div>
+      <div class="version">v1.1.0</div>
+    </header>
+
+    <!-- Main Switch -->
+    <div class="card switch-card">
+      <div class="switch-info">
+        <span class="label-title">Organizador Ativo</span>
+        <span class="label-desc">Mover prioritários para o topo</span>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="toggle-enabled" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <!-- Live Stats -->
+    <div class="stats-row" id="stats-row">
+      <div class="stat-box priority">
+        <span class="stat-value" id="stat-priority">-</span>
+        <span class="stat-label">🎯 Para Assistir</span>
+      </div>
+      <div class="stat-box completed">
+        <span class="stat-value" id="stat-completed">-</span>
+        <span class="stat-label">✔️ Já Vistos</span>
+      </div>
+      <div class="stat-box total">
+        <span class="stat-value" id="stat-total">-</span>
+        <span class="stat-label">📁 Total</span>
+      </div>
+    </div>
+
+    <!-- Color Presets -->
+    <div class="section-title">Cor do Destaque (Texto)</div>
+    <div class="color-picker-container">
+      <div class="color-presets">
+        <button class="color-btn active" data-color="#f47521" style="background: #f47521;" title="Laranja Crunchyroll"></button>
+        <button class="color-btn" data-color="#00d2ff" style="background: #00d2ff;" title="Ciano Neon"></button>
+        <button class="color-btn" data-color="#a855f7" style="background: #a855f7;" title="Roxo Neon"></button>
+        <button class="color-btn" data-color="#10b981" style="background: #10b981;" title="Verde Esmeralda"></button>
+        <button class="color-btn" data-color="#ff3366" style="background: #ff3366;" title="Rosa Choque"></button>
+      </div>
+      <div class="custom-color-wrapper">
+        <input type="color" id="custom-color-input" value="#f47521">
+        <span class="custom-color-label" id="custom-color-hex">#F47521</span>
+      </div>
+    </div>
+
+    <!-- Options List -->
+    <div class="section-title">Estilo Visual & Destaque</div>
+    <div class="options-list">
+      <label class="option-item">
+        <span>Pintar somente o texto</span>
+        <input type="checkbox" id="opt-paint-only-text" checked>
+      </label>
+
+      <label class="option-item">
+        <span>Borda colorida ao redor do card</span>
+        <input type="checkbox" id="opt-card-border">
+      </label>
+
+      <label class="option-item">
+        <span>Exibir Badge no Card</span>
+        <input type="checkbox" id="opt-badge">
+      </label>
+
+      <label class="option-item">
+        <span>Esmaecer "Assistir de Novo" (opcional)</span>
+        <input type="checkbox" id="opt-dim">
+      </label>
+    </div>
+
+    <div class="section-title">Filtros de Prioridade</div>
+    <div class="options-list">
+      <label class="option-item">
+        <span>Incluir "A Seguir" (Novos episódios)</span>
+        <input type="checkbox" id="opt-next" checked>
+      </label>
+
+      <label class="option-item">
+        <span>Incluir "Continuar"</span>
+        <input type="checkbox" id="opt-continue" checked>
+      </label>
+
+      <label class="option-item">
+        <span>Incluir "Começar a Assistir"</span>
+        <input type="checkbox" id="opt-start" checked>
+      </label>
+
+      <label class="option-item">
+        <span>Barra de resumo no topo</span>
+        <input type="checkbox" id="opt-toolbar" checked>
+      </label>
+    </div>
+
+    <!-- Method selection -->
+    <div class="section-title">Método de Ordenação</div>
+    <div class="reorder-select-container">
+      <select id="select-reorder-mode">
+        <option value="css">CSS Grid (Recomendado - 100% estável)</option>
+        <option value="dom">DOM Físico (Recortar e colar no início)</option>
+      </select>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="footer-actions">
+      <button id="btn-reorder-now" class="primary-btn">⚡ Reorganizar Agora</button>
+      <button id="btn-reset" class="secondary-btn" title="Restaurar padrões">Restaurar</button>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
