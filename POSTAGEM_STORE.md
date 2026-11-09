@@ -224,9 +224,9 @@ Marque as 3 caixas de seleção da Google:
 ### 📌 URL da Política de Privacidade (Privacy Policy URL)
 - Link para a política de privacidade pública:
   ```text
-  https://github.com/SEU_USUARIO/SEU_REPOSITORIO/blob/main/PRIVACY_POLICY.md
+  https://github.com/eurairapelli/crunchyroll-watchlist-organizer/blob/master/PRIVACY_POLICY.md
   ```
-  *(Ou publique o arquivo `PRIVACY_POLICY.html` no GitHub Pages do seu repositório: `https://SEU_USUARIO.github.io/crunchyroll_rainbow/PRIVACY_POLICY.html`)*
+  *(Repositório público oficial do projeto: `https://github.com/eurairapelli/crunchyroll-watchlist-organizer`)*
 
 ---
 
