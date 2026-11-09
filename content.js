@@ -21,12 +21,14 @@
     includeStart: true,      // "Começar a Assistir"
     includeContinue: true,   // "Continuar"
     showToolbar: true,
-    reorderMode: 'css'       // 'css' ou 'dom'
+    reorderMode: 'slots'     // 'slots' (Início global) ou 'highlight_only'
   };
 
   let currentSettings = { ...DEFAULT_SETTINGS };
   let debounceTimer = null;
   let isProcessing = false;
+  let isReordering = false;
+  let originalIndexCounter = 0;
 
   // Carregar configurações salvas
   function loadSettings(callback) {
@@ -149,6 +151,106 @@
   }
 
   /**
+   * Encontra o container/célula correspondente a este card dentro da grade ou fileira.
+   */
+  function getItemContainer(card) {
+    const ercItem = card.closest('.erc-my-lists-item');
+    if (ercItem) return ercItem;
+
+    let curr = card;
+    while (curr.parentElement && curr.parentElement !== document.body) {
+      const parent = curr.parentElement;
+      if (parent.children.length > 1) {
+        return curr;
+      }
+      curr = parent;
+    }
+    return card;
+  }
+
+  /**
+   * Reordena os cards nos slots físicos da página (atravessando fileiras)
+   * para que TODOS os prioritários ocupem as primeiras posições da grade/lista,
+   * sem ficarem presos na fileira de origem.
+   */
+  function reorderSlots(orderedCards) {
+    if (!orderedCards || orderedCards.length === 0) return;
+
+    // 1. Mapeia cada card para seu container de item na grade
+    const allContainers = [];
+    const containerToCard = new Map();
+
+    orderedCards.forEach(card => {
+      const container = getItemContainer(card);
+      if (!containerToCard.has(container)) {
+        containerToCard.set(container, card);
+        allContainers.push(container);
+      }
+    });
+
+    if (allContainers.length <= 1) return;
+
+    // 2. Obtém a ordem atual dos containers no DOM (da esquerda para direita, de cima para baixo)
+    const currentDomContainers = [...allContainers].sort((a, b) => {
+      if (a === b) return 0;
+      const pos = a.compareDocumentPosition(b);
+      return (pos & Node.DOCUMENT_POSITION_FOLLOWING) ? -1 : 1;
+    });
+
+    // 3. Os containers ordenados desejados seguem a lista de cards ordenada (prioritários primeiro)
+    const targetContainers = allContainers;
+
+    // 4. Verifica se já está exatamente na ordem desejada
+    let alreadySorted = (currentDomContainers.length === targetContainers.length);
+    if (alreadySorted) {
+      for (let i = 0; i < currentDomContainers.length; i++) {
+        if (currentDomContainers[i] !== targetContainers[i]) {
+          alreadySorted = false;
+          break;
+        }
+      }
+    }
+
+    if (alreadySorted) {
+      return; // Já ordenado, nenhuma mutação no DOM
+    }
+
+    // 5. Executa a reorganização por slots usando marcadores de comentário (placeholders)
+    isReordering = true;
+    try {
+      const placeholders = [];
+      for (let i = 0; i < currentDomContainers.length; i++) {
+        const ph = document.createComment('cr-slot-' + i);
+        const slotEl = currentDomContainers[i];
+        if (slotEl && slotEl.parentNode) {
+          slotEl.parentNode.insertBefore(ph, slotEl);
+          placeholders.push(ph);
+        } else {
+          placeholders.push(null);
+        }
+      }
+
+      for (let i = 0; i < targetContainers.length; i++) {
+        const ph = placeholders[i];
+        const container = targetContainers[i];
+        if (ph && ph.parentNode && container) {
+          ph.parentNode.insertBefore(container, ph);
+        }
+      }
+
+      placeholders.forEach(ph => {
+        if (ph && ph.parentNode) ph.remove();
+      });
+    } catch (e) {
+      console.warn('[CR Organizer] Erro ao reorganizar slots:', e);
+    } finally {
+      setTimeout(() => {
+        isReordering = false;
+      }, 150);
+    }
+  }
+
+  /**
    * Analisa um card e determina seu status
    */
   function inspectCardStatus(card) {
@@ -217,6 +319,10 @@
     let otherCards = [];
 
     cards.forEach(card => {
+      if (!card.dataset.crOriginalIndex) {
+        card.dataset.crOriginalIndex = String(originalIndexCounter++);
+      }
+
       const status = inspectCardStatus(card);
 
       if (['START', 'CONTINUE', 'NEXT', 'WATCH'].includes(status.type)) {
@@ -228,8 +334,8 @@
       }
     });
 
-    // 1. Aplicar destaque aos prioritários (2. PINTE SOMENTE O TEXTO)
-    priorityCards.forEach(({ card, status }, index) => {
+    // 1. Aplicar destaque aos prioritários (PINTE SOMENTE O TEXTO)
+    priorityCards.forEach(({ card, status }) => {
       card.classList.add('cr-card-priority');
       card.classList.remove('cr-card-completed');
 
@@ -239,10 +345,8 @@
         card.classList.remove('cr-card-border-active');
       }
 
-      // Reordenação por CSS (segura para o React virtualizado)
-      // Aplica order no container de item da grade se disponível
-      const itemContainer = card.closest('.erc-my-lists-item') || card;
-      itemContainer.style.order = String(-1000 + index);
+      const itemContainer = getItemContainer(card);
+      itemContainer.style.order = ''; // Limpa order CSS para não prender em fileiras
 
       // Injeta badge somente se o usuário tiver configurado
       if (currentSettings.showBadge) {
@@ -253,38 +357,36 @@
     });
 
     // 2. Tratar cards concluídos ("Assistir de Novo")
-    // (1. NÃO DEIXAR TUDO ESCURO - visibilidade 100% normal por padrão)
-    completedCards.forEach(({ card }, index) => {
+    // (NÃO DEIXAR TUDO ESCURO - visibilidade 100% normal por padrão)
+    completedCards.forEach(({ card }) => {
       card.classList.add('cr-card-completed');
       card.classList.remove('cr-card-priority');
       card.classList.remove('cr-card-border-active');
 
-      const itemContainer = card.closest('.erc-my-lists-item') || card;
-      itemContainer.style.order = String(10 + index);
+      const itemContainer = getItemContainer(card);
+      itemContainer.style.order = '';
       removeBadge(card);
     });
 
     // 3. Outros cards
-    otherCards.forEach(({ card }, index) => {
+    otherCards.forEach(({ card }) => {
       card.classList.remove('cr-card-priority');
       card.classList.remove('cr-card-completed');
       card.classList.remove('cr-card-border-active');
 
-      const itemContainer = card.closest('.erc-my-lists-item') || card;
-      itemContainer.style.order = String(500 + index);
+      const itemContainer = getItemContainer(card);
+      itemContainer.style.order = '';
       removeBadge(card);
     });
 
-    // 4. Se o modo selecionado for DOM físico
-    if (currentSettings.reorderMode === 'dom') {
-      const firstItem = priorityCards[0]?.card.closest('.erc-my-lists-item') || priorityCards[0]?.card;
-      const parent = firstItem?.parentElement;
-      if (parent) {
-        for (let i = priorityCards.length - 1; i >= 0; i--) {
-          const item = priorityCards[i].card.closest('.erc-my-lists-item') || priorityCards[i].card;
-          parent.insertBefore(item, parent.firstChild);
-        }
-      }
+    // 4. Reordenação Real por Slots (Leva TODOS os prioritários para o início da lista)
+    if (currentSettings.reorderMode !== 'highlight_only') {
+      const sortedCards = [
+        ...priorityCards.map(p => p.card),
+        ...completedCards.map(c => c.card),
+        ...otherCards.map(o => o.card)
+      ];
+      reorderSlots(sortedCards);
     }
 
     // 5. Barra de estatísticas no topo da watchlist
@@ -391,10 +493,20 @@
       card.classList.remove('cr-card-priority');
       card.classList.remove('cr-card-completed');
       card.classList.remove('cr-card-border-active');
-      const itemContainer = card.closest('.erc-my-lists-item') || card;
+      const itemContainer = getItemContainer(card);
       itemContainer.style.order = '';
       removeBadge(card);
     });
+
+    // Se houver índice original salvo, restaura a ordem original
+    const cardsWithOriginal = cards.filter(c => c.dataset.crOriginalIndex !== undefined);
+    if (cardsWithOriginal.length === cards.length && cardsWithOriginal.length > 1) {
+      cardsWithOriginal.sort((a, b) => {
+        return parseInt(a.dataset.crOriginalIndex, 10) - parseInt(b.dataset.crOriginalIndex, 10);
+      });
+      reorderSlots(cardsWithOriginal);
+    }
+
     removeToolbar();
     document.body.classList.remove('cr-dim-completed');
   }
@@ -405,7 +517,7 @@
   function triggerProcessWatchlist() {
     if (debounceTimer) clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
-      if (!isProcessing) {
+      if (!isProcessing && !isReordering) {
         isProcessing = true;
         try {
           processWatchlist();
@@ -418,13 +530,17 @@
 
   // Configuração do MutationObserver
   const observer = new MutationObserver(mutations => {
+    if (isReordering) return;
     if (!isWatchlistPage()) return;
 
     let shouldUpdate = false;
     for (const m of mutations) {
-      // Ignora mutações provocadas pela própria barra ou badges
+      // Ignora mutações provocadas pela própria barra, badges ou comentários de slot
       if (m.target && m.target.classList &&
          (m.target.classList.contains('cr-organizer-toolbar') || m.target.classList.contains('cr-priority-badge'))) {
+        continue;
+      }
+      if (m.target && m.target.nodeType === Node.COMMENT_NODE) {
         continue;
       }
       if (m.addedNodes.length > 0) {

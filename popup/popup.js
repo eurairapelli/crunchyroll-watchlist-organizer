@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     includeStart: true,
     includeContinue: true,
     showToolbar: true,
-    reorderMode: 'css'
+    reorderMode: 'slots'
   };
 
   // Elementos do DOM
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
     optContinue.checked = currentSettings.includeContinue;
     optStart.checked = currentSettings.includeStart;
     optToolbar.checked = currentSettings.showToolbar;
-    selectMode.value = currentSettings.reorderMode || 'css';
+    selectMode.value = currentSettings.reorderMode || 'slots';
 
     const color = currentSettings.highlightColor || '#f47521';
     customColorInput.value = color;

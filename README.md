@@ -52,6 +52,8 @@ Organiza sua lista de animes de forma inteligente: **pinta o texto** ("Começar 
 
 ## 🔄 Fluxo de Atualização / Nova Versão
 
+Para o checklist completo de envio para a Chrome Web Store e Edge Add-ons, consulte o arquivo [`POSTAGEM_STORE.md`](file:///e:/z-dev/node/www/crunchyroll_rainbow/POSTAGEM_STORE.md) e o [`STORE_GUIDE.md`](file:///e:/z-dev/node/www/crunchyroll_rainbow/STORE_GUIDE.md).
+
 Quando fizer alterações e quiser lançar uma nova versão:
 
 1. Altere o número da versão no [manifest.json](file:///e:/z-dev/node/www/crunchyroll_rainbow/manifest.json) (ex: `"1.2.0"`).

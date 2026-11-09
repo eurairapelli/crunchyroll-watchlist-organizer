@@ -218,6 +218,93 @@
     }
   }
 
+  let isReordering = false;
+
+  function getItemContainer(card) {
+    const ercItem = card.closest('.erc-my-lists-item');
+    if (ercItem) return ercItem;
+
+    let curr = card;
+    while (curr.parentElement && curr.parentElement !== document.body) {
+      const parent = curr.parentElement;
+      if (parent.children.length > 1) {
+        return curr;
+      }
+      curr = parent;
+    }
+    return card;
+  }
+
+  function reorderSlots(orderedCards) {
+    if (!orderedCards || orderedCards.length === 0) return;
+
+    const allContainers = [];
+    const containerToCard = new Map();
+
+    orderedCards.forEach(card => {
+      const container = getItemContainer(card);
+      if (!containerToCard.has(container)) {
+        containerToCard.set(container, card);
+        allContainers.push(container);
+      }
+    });
+
+    if (allContainers.length <= 1) return;
+
+    const currentDomContainers = [...allContainers].sort((a, b) => {
+      if (a === b) return 0;
+      const pos = a.compareDocumentPosition(b);
+      return (pos & Node.DOCUMENT_POSITION_FOLLOWING) ? -1 : 1;
+    });
+
+    const targetContainers = allContainers;
+
+    let alreadySorted = (currentDomContainers.length === targetContainers.length);
+    if (alreadySorted) {
+      for (let i = 0; i < currentDomContainers.length; i++) {
+        if (currentDomContainers[i] !== targetContainers[i]) {
+          alreadySorted = false;
+          break;
+        }
+      }
+    }
+
+    if (alreadySorted) return;
+
+    isReordering = true;
+    try {
+      const placeholders = [];
+      for (let i = 0; i < currentDomContainers.length; i++) {
+        const ph = document.createComment('cr-slot-' + i);
+        const slotEl = currentDomContainers[i];
+        if (slotEl && slotEl.parentNode) {
+          slotEl.parentNode.insertBefore(ph, slotEl);
+          placeholders.push(ph);
+        } else {
+          placeholders.push(null);
+        }
+      }
+
+      for (let i = 0; i < targetContainers.length; i++) {
+        const ph = placeholders[i];
+        const container = targetContainers[i];
+        if (ph && ph.parentNode && container) {
+          ph.parentNode.insertBefore(container, ph);
+        }
+      }
+
+      placeholders.forEach(ph => {
+        if (ph && ph.parentNode) ph.remove();
+      });
+    } catch (e) {
+      console.warn('[CR Organizer] Erro ao reorganizar slots:', e);
+    } finally {
+      setTimeout(() => {
+        isReordering = false;
+      }, 150);
+    }
+  }
+
   function processWatchlist() {
     if (!isWatchlistPage()) return;
     const cards = findWatchlistCards();
@@ -225,6 +312,7 @@
 
     let priorityCards = [];
     let completedCards = [];
+    let otherCards = [];
 
     cards.forEach(card => {
       const status = inspectCardStatus(card);
@@ -232,22 +320,38 @@
         priorityCards.push({ card, status });
       } else if (status.type === 'COMPLETED') {
         completedCards.push({ card, status });
+      } else {
+        otherCards.push({ card, status });
       }
     });
 
-    priorityCards.forEach(({ card }, index) => {
+    priorityCards.forEach(({ card }) => {
       card.classList.add('cr-card-priority');
       card.classList.remove('cr-card-completed');
-      const itemContainer = card.closest('.erc-my-lists-item') || card;
-      itemContainer.style.order = String(-1000 + index);
+      const itemContainer = getItemContainer(card);
+      itemContainer.style.order = '';
     });
 
-    completedCards.forEach(({ card }, index) => {
+    completedCards.forEach(({ card }) => {
       card.classList.add('cr-card-completed');
       card.classList.remove('cr-card-priority');
-      const itemContainer = card.closest('.erc-my-lists-item') || card;
-      itemContainer.style.order = String(10 + index);
+      const itemContainer = getItemContainer(card);
+      itemContainer.style.order = '';
     });
+
+    otherCards.forEach(({ card }) => {
+      card.classList.remove('cr-card-priority');
+      card.classList.remove('cr-card-completed');
+      const itemContainer = getItemContainer(card);
+      itemContainer.style.order = '';
+    });
+
+    const sortedCards = [
+      ...priorityCards.map(p => p.card),
+      ...completedCards.map(c => c.card),
+      ...otherCards.map(o => o.card)
+    ];
+    reorderSlots(sortedCards);
 
     updateToolbar(priorityCards.length, completedCards.length, cards.length);
   }
@@ -255,15 +359,23 @@
   let debounceTimer = null;
   function triggerProcess() {
     if (debounceTimer) clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(processWatchlist, 120);
+    debounceTimer = setTimeout(() => {
+      if (!isReordering) {
+        processWatchlist();
+      }
+    }, 120);
   }
 
   const observer = new MutationObserver(mutations => {
+    if (isReordering) return;
     if (!isWatchlistPage()) return;
     let shouldUpdate = false;
     for (const m of mutations) {
       if (m.target && m.target.classList &&
          (m.target.classList.contains('cr-organizer-toolbar') || m.target.classList.contains('cr-priority-badge'))) {
+        continue;
+      }
+      if (m.target && m.target.nodeType === Node.COMMENT_NODE) {
         continue;
       }
       if (m.addedNodes.length > 0) {
